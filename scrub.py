@@ -22,7 +22,6 @@ def getData():
         return ET.tostring(ETdata, method='xml')
     else:
         ETdata.findall('TYPE')[0].text = 'CUE'
-        # ETdata.write('CUE.xml')
         return ET.tostring(ETdata, method='xml')
 
 
@@ -97,7 +96,7 @@ def get_day_time_code():
     day = datetime.date.today().strftime("%w")
     hour = date.hour
     dayCode = int(day) + 30
-    timeCode = getTimeStatusCode(int(hour));
+    timeCode = getTimeStatusCode(int(hour))
     return dayCode, timeCode
 
 def getTimeStatusCode(time) :
