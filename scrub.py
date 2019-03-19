@@ -4,7 +4,7 @@ import xml.etree.ElementTree as ET
 from pymongo import MongoClient
 node =Flask(__name__)
 
-@node.route('/sendXML', methods=['POST'])
+@node.route('/', methods=['POST'])
 def getData():
     global fromEntityGlobal
     global toUserGlobal
@@ -36,7 +36,7 @@ def getHeader():
     headerType = col['headerType']
     headerStatus = col['status']
     entityRegID = col['regId']
-    if headerStatus=='1':
+    if headerStatus== 1:
         if(headerType=='s'):
             _isUserConsent = getUserConsent(toUserGlobal,fromEntityGlobal)
             if _isUserConsent:
