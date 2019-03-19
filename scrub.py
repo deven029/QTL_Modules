@@ -17,7 +17,9 @@ def getData():
     fromEntityGlobal = fromEntity
     toUserGlobal = toUser
     _finalStatus = getHeader()
+    print()
     if(_finalStatus=='REL'):
+
         ETdata.findall('TYPE')[0].text = 'REL'
         return ET.tostring(ETdata, method='xml')
     else:
@@ -41,16 +43,19 @@ def getHeader():
             if _isUserConsent:
                 return 'CUE'
             else:
+                print("Entity does not have user's consent")
                 return 'REL'
         elif(headerType =='p'):
             _isuserPreference = getUserPreference(toUserGlobal)
             if _isuserPreference:
                 return 'CUE'
             else:
+                print("user's preference is not set")
                 return 'REL'
         elif(headerType == 't'):
             return 'CUE'
     else:
+        print('due to unregistered Header or Header is Inactive')
         return 'REL'
 
 def getUserConsent(toUser,fromEntity):
@@ -82,10 +87,13 @@ def getUserPreference(toUser):
     liveDayCode,liveTimeCode = get_day_time_code()
 
     if('11' in communicationMode):
+        print("User has blocked all Voice call Communication")
         return False
     elif ((liveTimeCode in _Usertime_band ) or (liveDayCode in _UserdayType)):
+        print("User has blocked current time band or this week of day")
         return False
     elif(entitytype in blocked_category):
+        print("This type of entity can not sent Promotional messages to this User")
         return False
     else:
         return True
@@ -119,4 +127,4 @@ def getTimeStatusCode(time) :
     elif (time>=21 and time<=24) :
         return 29
 
-node.run(host= '172.17.208.98', port=9191)
+node.run()
