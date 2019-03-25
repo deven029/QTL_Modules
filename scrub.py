@@ -2,13 +2,23 @@ import datetime
 from flask import Flask,request
 import xml.etree.ElementTree as ET
 from pymongo import MongoClient
+import logging
+
 node =Flask(__name__)
+logger = logging.getLogger('logging-example')
+if len(logger.handlers) != 1:
+    hdlr = logging.FileHandler('/home/abhijeet/PycharmProjects/profinityFilter/logs/logs.log')
+    formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+    hdlr.setFormatter(formatter)
+    logger.addHandler(hdlr)
+    logger.setLevel(logging.DEBUG)
 
 @node.route('/', methods=['POST'])
 def getData():
     global fromEntityGlobal
     global toUserGlobal
     global date
+    global entityRegID
     date = datetime.datetime.now()
     xmlDict = request.data
     ETdata = ET.fromstring(xmlDict)
@@ -17,7 +27,7 @@ def getData():
     fromEntityGlobal = fromEntity
     toUserGlobal = toUser
     _finalStatus = getHeader()
-    print()
+    logger.info(" Requests' final status " + str(_finalStatus))
     if(_finalStatus=='REL'):
 
         ETdata.findall('TYPE')[0].text = 'REL'
@@ -33,53 +43,67 @@ def getHeader():
     client = MongoClient('localhost', 27017)
     db = client['telecom']
     headers = db['headers']
-    col = headers.find_one({'headerName':fromEntityGlobal})
-    headerType = col['headerType']
-    headerStatus = col['status']
-    entityRegID = col['regId']
+    try:
+        col = headers.find_one({'headerName':fromEntityGlobal})
+        headerType = col['headerType']
+        headerStatus = col['status']
+        entityRegID = col['regId']
+    except:
+        logger.info("Header Name is not registered" )
+        return 'REL'
+
     if headerStatus== 1:
         if(headerType=='s'):
             _isUserConsent = getUserConsent(toUserGlobal,fromEntityGlobal)
             if _isUserConsent:
                 return 'CUE'
             else:
-                print("Entity does not have user's consent")
+                logger.info("Entity does not have user's consent")
                 return 'REL'
         elif(headerType =='p'):
             _isuserPreference = getUserPreference(toUserGlobal)
             if _isuserPreference:
                 return 'CUE'
             else:
-                print("user's preference is not set")
+                logger.info("user's preference is not set")
                 return 'REL'
         elif(headerType == 't'):
             return 'CUE'
+        else:
+            logger.info("Header Type is not available")
+            return 'REL'
     else:
-        print('due to unregistered Header or Header is Inactive')
+        logger.info('due to unregistered Header or Header is Inactive')
         return 'REL'
 
 def getUserConsent(toUser,fromEntity):
 
     consents = db['consents']
-    consentValue = consents.find_one({'headerName':fromEntity,'subNo':toUser})
-    if consentValue:
+    try:
+        consentValue = consents.find_one({'headerName':fromEntity,'subNo':toUser})
         status = consentValue['status']
         if status == '1':
             return True
         else:
             return False
-    else:
+
+    except:
+        logger.info("This Entity Does not have user's consent")
         return False
 
 def getUserPreference(toUser):
 
     preference = db['preference']
-    preference_data = preference.find_one({'phone':toUser})
-    blocked_category = preference_data['category']
-    entity = db['entities']
-    getentityType = entity.find_one({'regId':entityRegID})
-    entitytype = getentityType['category']
-    communicationMode = preference_data['communicationMode']
+    try:
+        preference_data = preference.find_one({'phone':toUser})
+        blocked_category = preference_data['category']
+        entity = db['entities']
+        getentityType = entity.find_one({'regId':entityRegID})
+        entitytype = getentityType['category']
+        communicationMode = preference_data['communicationMode']
+    except:
+        logger.info("User Preference did not match")
+        return False
 
     # preference Check Block
     _Usertime_band = preference_data['dayTimeBand']
@@ -87,13 +111,13 @@ def getUserPreference(toUser):
     liveDayCode,liveTimeCode = get_day_time_code()
 
     if('11' in communicationMode):
-        print("User has blocked all Voice call Communication")
+        logger.info("User has blocked all Voice call Communication")
         return False
     elif ((liveTimeCode in _Usertime_band ) or (liveDayCode in _UserdayType)):
-        print("User has blocked current time band or this week of day")
+        logger.info("User has blocked current time band or this week of day")
         return False
     elif(entitytype in blocked_category):
-        print("This type of entity can not sent Promotional messages to this User")
+        logger.info("This type of entity can not sent Promotional messages to this User")
         return False
     else:
         return True
