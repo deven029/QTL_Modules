@@ -31,9 +31,11 @@ def getData():
     if(_finalStatus=='REL'):
 
         ETdata.findall('TYPE')[0].text = 'REL'
+        logger.info(" Requests' final REL ")
         return ET.tostring(ETdata, method='xml')
     else:
         ETdata.findall('TYPE')[0].text = 'CUE'
+        logger.info(" Requests' final CUE ")
         return ET.tostring(ETdata, method='xml')
 
 
