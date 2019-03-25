@@ -7,7 +7,7 @@ import logging
 node =Flask(__name__)
 logger = logging.getLogger('logging-example')
 if len(logger.handlers) != 1:
-    hdlr = logging.FileHandler('/home/abhijeet/PycharmProjects/profinityFilter/logs/logs.log')
+    hdlr = logging.FileHandler('/home/qtl/xmlTesting.log')
     formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
     hdlr.setFormatter(formatter)
     logger.addHandler(hdlr)
